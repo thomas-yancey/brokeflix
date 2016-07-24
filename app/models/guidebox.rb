@@ -29,14 +29,13 @@ class Guidebox
     self.set_count
 
     until self.curr_movie > self.total_results
-      self.iterate_through_curr_response
+      self.iterate_through_all_movies
       self.curr_movie += self.movie_count
       self.store_response
-      puts curr_movie
     end
   end
 
-  def iterate_through_curr_response
+  def iterate_through_all_movies
     self.response["results"].each do |movie|
       new_movie = Movie.find_or_create_by(guidebox_id: movie["id"])
       new_movie.title = movie["title"] if movie["title"]
@@ -48,6 +47,46 @@ class Guidebox
       new_movie.save
     end
   end
+
+  def collect_individual_movie_data(movie)
+    self.class.get("/movie/#{movie.guidebox_id}")
+  end
+
+  def store_individual_response(movie)
+    self.response = self.collect_individual_movie_data(movie)
+  end
+
+  def update_individual_movie(movie)
+    self.store_individual_response(movie)
+    movie.overview = response["overview"] if response["overview"]
+    movie.overview = response["overview"] if response["overview"]
+    movie.poster = response["poster_240x342"] if response["poster_240x342"]
+    if response["trailers"] && response["trailers"]["web"].any?
+      movie.trailer = response["trailers"]["web"][0]["embed"]
+    end
+    movie.metacritic_url = response["metacritic"] if response["metacritic"]
+    movie.save
+  end
+
+  def add_movie_sources(movie)
+    response["free_web_sources"].each do |web_source|
+      source = Source.new(movie_id: movie.id)
+      source.name = web_source["source"]
+      source.display_name = web_source["display_name"]
+      source.link = web_source["link"]
+      source.save
+
+    end
+  end
+
+  def add_info_to_all_movies
+    movies = Movie.where(overview: nil)
+    movies.each do |curr_movie|
+      self.update_individual_movie(curr_movie)
+      self.add_movie_sources(curr_movie)
+    end
+  end
+
 
   # t.integer :ombd_id
   # t.string :title

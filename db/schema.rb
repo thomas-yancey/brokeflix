@@ -10,10 +10,29 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160722223204) do
+ActiveRecord::Schema.define(version: 20160724062139) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "actors", force: :cascade do |t|
+    t.string   "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "actors_movies", id: false, force: :cascade do |t|
+    t.integer "actor_id", null: false
+    t.integer "movie_id", null: false
+    t.index ["actor_id", "movie_id"], name: "index_actors_movies_on_actor_id_and_movie_id", using: :btree
+    t.index ["movie_id", "actor_id"], name: "index_actors_movies_on_movie_id_and_actor_id", using: :btree
+  end
+
+  create_table "directors", force: :cascade do |t|
+    t.string   "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "movies", force: :cascade do |t|
     t.integer  "guidebox_id"
@@ -37,6 +56,18 @@ ActiveRecord::Schema.define(version: 20160722223204) do
     t.string   "tomato_url"
     t.datetime "created_at",       null: false
     t.datetime "updated_at",       null: false
+    t.string   "poster"
+    t.integer  "director_id"
+  end
+
+  create_table "sources", force: :cascade do |t|
+    t.integer  "movie_id",     null: false
+    t.string   "name"
+    t.string   "display_name"
+    t.string   "link"
+    t.datetime "created_at",   null: false
+    t.datetime "updated_at",   null: false
+    t.index ["movie_id"], name: "index_sources_on_movie_id", using: :btree
   end
 
 end
