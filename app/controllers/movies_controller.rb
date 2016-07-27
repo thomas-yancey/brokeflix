@@ -1,11 +1,11 @@
 class MoviesController < ApplicationController
 
   def index
-    query = "SELECT * FROM movies
-             WHERE release_year > #{params[:start_year]}
-             ORDER BY metascore
-             DESC NULLS LAST"
-    movies = Movie.paginate_by_sql(query, :page => params[:page], :per_page => 30)
+
+    movies = Movie.where(
+      "release_year >= ? AND release_Year <= ?",params[:start_year],params[:end_year]).includes(:sources).where(sources: {display_name: params[:selectedSources]}).order("#{params[:review_field]} DESC NULLS LAST")
+
+    movies = movies.paginate(:page => params[:page], :per_page => 30)
     render json:  {
       current_page: movies.current_page,
       total_pages: movies.total_pages,
