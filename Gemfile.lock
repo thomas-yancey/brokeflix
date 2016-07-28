@@ -135,6 +135,9 @@ GEM
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.2)
     will_paginate (3.1.0)
+    yaml_db (0.4.0)
+      rails (>= 3.0, < 5.1)
+      rake (>= 0.8.7)
 
 PLATFORMS
   ruby
@@ -154,6 +157,7 @@ DEPENDENCIES
   textacular
   tzinfo-data
   will_paginate (~> 3.1.0)
+  yaml_db
 
 BUNDLED WITH
    1.12.5
