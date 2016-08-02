@@ -5,9 +5,14 @@ class MoviesController < ApplicationController
     search_text = params[:title_search].downcase
     movies = Movie.where("release_year >= ? AND release_Year <= ?",
     params[:start_year],params[:end_year]).includes(
-      :sources).where(
+      :sources, :director, :actors).where(
       sources: {display_name: params[:selectedSources]}).where(
-      "Lower(title) LIKE ?", '%' + search_text + '%'
+      "lower(title) LIKE ?
+      OR LOWER(actors.name) LIKE ?
+      OR LOWER(directors.name) LIKE ?",
+      '%' + search_text + '%',
+      '%' + search_text + '%',
+      '%' + search_text + '%'
       ).order(
       "#{params[:review_field]} DESC NULLS LAST"
       )
