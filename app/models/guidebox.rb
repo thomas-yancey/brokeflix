@@ -1,6 +1,8 @@
 class Guidebox
   include HTTParty
-  attr_accessor :curr_movie, :movie_count, :sources, :platform, :response, :total_results
+  attr_accessor :curr_movie, :movie_count, :sources, :platform,
+    :response, :total_results, :page, :total_pages, :change_results,
+    :movies_with_updates, :change_curr_page, :change_total_page
 
   base_uri "http://api-public.guidebox.com/v1.43/US/#{ENV["GUIDEBOX_KEY"]}"
   def initialize(params={})
@@ -10,13 +12,65 @@ class Guidebox
       @platform = params[:platform] || "web"
       @response = nil
       @total_results = 0
+      @total_pages = nil
+      @page = params[:page] || 1
+      @change_results = nil
+      @movies_with_updates = []
+      @change_curr_page = 1
+      @change_total_page = nil
+  end
+
+  def change_update_movie_sources
+    self.change_collect_all_ids_in_database
+    self.movies_with_updates.each do |movie_id|
+      self.change_update_individual_movie_sources(movie_id)
+    end
+  end
+
+  def change_update_individual_movie_sources(movie_id)
+    self.response = self.collect_individual_movie_data_id(movie_id)
+    curr_movie = Movie.find_by(guidebox_id: movie_id)
+    if self.response["free_web_sources"]
+      curr_movie.sources.destroy_all
+      self.add_movie_sources(curr_movie)
+    end
+  end
+
+  def change_collect_all_ids_in_database
+    self.change_store_response
+    until self.change_curr_page == self.change_total_page
+      self.change_collect_curr_page_change_ids
+      self.change_curr_page = self.change_curr_page + 1
+      self.change_store_response
+    end
+  end
+
+  def change_collect_curr_page_change_ids
+    self.change_results.each do |movie|
+      if Movie.find_by(guidebox_id: movie["id"])
+        movies_with_updates << movie["id"]
+      end
+    end
+  end
+
+  def change_store_response
+    total_response = self.change_request
+    self.change_curr_page = total_response["page"]
+    self.change_total_page = total_response["total_pages"]
+    self.change_results = total_response["results"]
+  end
+
+  def change_request
+    update_time = DateTime.now - 7.days
+    unix_update_time = update_time.to_i
+    self.class.get("/updates/movies/changes/#{unix_update_time}/?limit=1000&page=#{self.change_curr_page}")
   end
 
   def request_movies
     self.class.get("/movies/all/#{self.curr_movie}/#{self.movie_count}/#{self.sources}/#{self.platform}")
   end
 
-  def store_response
+  def store_all_movies_response
     self.response = self.request_movies
   end
 
@@ -25,17 +79,17 @@ class Guidebox
   end
 
   def collect_all_movies
-    self.store_response
+    self.store_all_movies_response
     self.set_count
 
     until self.curr_movie > self.total_results
-      self.iterate_through_all_movies
+      self.iterate_through_and_create_all_movies
       self.curr_movie += self.movie_count
-      self.store_response
+      self.store_all_movies_response
     end
   end
 
-  def iterate_through_all_movies
+  def iterate_through_and_create_all_movies
     self.response["results"].each do |movie|
       new_movie = Movie.find_or_create_by(guidebox_id: movie["id"])
       new_movie.title = movie["title"] if movie["title"]
@@ -50,6 +104,10 @@ class Guidebox
 
   def collect_individual_movie_data(movie)
     self.class.get("/movie/#{movie.guidebox_id}")
+  end
+
+  def collect_individual_movie_data_id(id)
+    self.class.get("/movie/#{id}")
   end
 
   def store_individual_response(movie)
@@ -75,7 +133,6 @@ class Guidebox
       source.display_name = web_source["display_name"]
       source.link = web_source["link"]
       source.save
-
     end
   end
 
@@ -86,5 +143,5 @@ class Guidebox
       self.add_movie_sources(curr_movie)
     end
   end
- 
+
 end
