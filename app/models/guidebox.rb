@@ -164,15 +164,12 @@ class Guidebox
     self.store_individual_response(movie)
     movie.overview = individual_response["overview"] if individual_response["overview"]
     movie.poster = individual_response["poster_240x342"] if individual_response["poster_240x342"]
-    if individual_response["trailers"] && individual_response["trailers"]["web"].any?
-      movie.trailer = individual_response["trailers"]["web"][0]["embed"]
-    end
     movie.metacritic_url = individual_response["metacritic"] if individual_response["metacritic"]
     movie.save
   end
 
   def add_movie_sources(movie)
-    self.response["free_web_sources"].each do |web_source|
+    self.individual_response["free_web_sources"].each do |web_source|
       source = Source.new(movie_id: movie.id)
       source.name = web_source["source"]
       source.display_name = web_source["display_name"]
