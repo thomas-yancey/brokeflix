@@ -1,4 +1,4 @@
-class CreateJoinTable < ActiveRecord::Migration[5.0]
+class CreateGenresMovies < ActiveRecord::Migration[5.0]
   def change
     create_join_table :genres, :movies do |t|
       t.index [:genre_id, :movie_id]

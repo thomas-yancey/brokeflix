@@ -1,26 +1,26 @@
 class MovieDatabase
 include HTTParty
-  attr_accessor :imdb_id, :response, :key, :movie
+  attr_accessor :omdb_id, :response, :key, :movie
 
   base_uri "https://api.themoviedb.org/3"
   def initialize(params={})
       @key = ENV["MOVIEDB_KEY"]
       @response = nil
-      @imdb_id = params[:imdb_id] || ""
+      @omdb_id = params[:omdb_id] || ""
       @movie = params[:movie]
   end
 
   def call_general_info
-    self.class.get("/movie/#{self.imdb_id}?api_key=#{self.key}")
+    self.class.get("/movie/#{self.omdb_id}?api_key=#{self.key}")
   end
 
   def make_call_and_collect_imdb_and_genres
     self.call_general_info
     self.response = self.call_general_info
-    unless self.response.parsed_response["status_code"] == 34
-      if !self.response["imdb_id"].nil?
-        movie.update_attributes(imdb_id: self.response["imdb_id"])
-      end
+    if self.response["imdb_id"]
+      movie.update_attributes(imdb_id: self.response["imdb_id"])
+    end
+    if self.response["genres"]
       self.collect_genres
     end
   end
@@ -40,16 +40,11 @@ include HTTParty
   end
 
   def call_movie_videos
-    self.class.get("/movie/#{self.imdb_id}/videos?api_key=#{self.key}")
+    self.class.get("/movie/#{self.omdb_id}/videos?api_key=#{self.key}")
   end
 
   def set_trailer_response
     self.response = self.call_movie_videos
-  end
-
-  def get_trailer_data
-    self.set_response
-    grab_key_from_response
   end
 
   def grab_key_from_response
@@ -62,11 +57,17 @@ include HTTParty
     nil
   end
 
+  def get_trailer_data
+    self.set_trailer_response
+    grab_key_from_response
+  end
+
   def add_trailer_key_to_movie
     self.set_trailer_response
     self.movie.update_attributes(trailer: self.grab_key_from_response)
   end
 
+  # Only used for initial pull of data
   def self.grab_key_for_all_movies_with_imdb_id
     movie_db_object = self.new
     movies = Movie.all
