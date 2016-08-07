@@ -53,9 +53,6 @@ class Guidebox
   def change_collect_all_ids_requiring_update_in_db
     self.change_store_response
     until self.change_curr_page > self.change_total_page
-      puts change_total_page
-      puts change_curr_page
-      sleep 0.2
       self.change_collect_curr_page_change_ids
       self.change_curr_page = self.change_curr_page + 1
       self.change_store_response
@@ -147,7 +144,7 @@ class Guidebox
     store_all_movies_response
     self.set_count
 
-    until self.curr_movie >= 500 #self.total_results
+    until self.curr_movie >= self.total_results
       iterate_through_and_create_new_movies
       self.curr_movie += self.movie_count
       self.store_all_movies_response

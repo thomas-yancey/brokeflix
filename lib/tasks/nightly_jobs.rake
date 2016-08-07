@@ -1,6 +1,6 @@
 task :create_new_movies => :environment do
 
-  guidebox = Guidebox.new({curr_movie: 250})
+  guidebox = Guidebox.new
   guidebox.create_and_store_new_movies
   new_movies = guidebox.new_movies_array
   # grab movie db info and omdb info
