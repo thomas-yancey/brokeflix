@@ -1,16 +1,15 @@
 class Omdb
   include HTTParty
-  attr_accessor :response,:imdb_id,:plot,:plot,:data_type, :movie_id
+  attr_accessor :response,:imdb_id,:plot,:plot,:data_type, :movie
 
   base_uri "http://www.omdbapi.com/?"
 
   def initialize(params={})
       @response = nil
-      @imdb_id = nil
-      @plot = params["plot"] || "full"
+      @movie = params[:movie] || nil
+      @imdb_id = params[:imdb_id] || nil
       @plot = params["plot"] || "full"
       @data_type = params["data_type"] || "json"
-      @movie_id = nil
   end
 
   def make_request
@@ -22,7 +21,6 @@ class Omdb
   end
 
   def collect_movie_data_from_response
-    movie = Movie.find(self.movie_id)
     movie.imdb_rating = response["imdbRating"] if response["imdb_rating"]
     movie.runtime = response["Runtime"] if response["Runtime"]
     movie.language = response["Language"] if response["Language"]
@@ -36,7 +34,6 @@ class Omdb
   end
 
   def collect_actors_from_response
-    movie = Movie.find(self.movie_id)
     if response["Actors"] && response["Actors"].length > 0
       actors = response["Actors"].split(",")
       actors.each do |actor|
@@ -47,7 +44,6 @@ class Omdb
   end
 
   def collect_director_from_response
-    movie = Movie.find(self.movie_id)
     if response["Director"]
       director = Director.find_or_create_by(name: response["Director"])
       director.movies << movie
@@ -56,14 +52,19 @@ class Omdb
 
   def collect_all_data
     collect_movie_data_from_response
-    # collect_actors_from_response
-    # collect_director_from_response
+    collect_actors_from_response
+    collect_director_from_response
+  end
+
+  def make_call_and_collect_all_data
+    self.store_response
+    self.collect_all_data
   end
 
   def get_data_for_all_movies_without_director
     movies = Movie.all
     movies.each do |movie|
-      self.movie_id = movie.id
+      self.movie = movie
       self.imdb_id = movie.imdb_id
       self.store_response
       self.collect_all_data

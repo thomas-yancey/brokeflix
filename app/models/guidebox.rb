@@ -2,7 +2,8 @@ class Guidebox
   include HTTParty
   attr_accessor :curr_movie, :movie_count, :sources, :platform,
     :response, :total_results, :page, :total_pages, :change_results,
-    :movies_with_updates, :change_curr_page, :change_total_page
+    :movies_with_updates, :change_curr_page, :change_total_page,
+    :individual_response, :new_movies_array
 
   base_uri "http://api-public.guidebox.com/v1.43/US/#{ENV["GUIDEBOX_KEY"]}"
   def initialize(params={})
@@ -18,6 +19,8 @@ class Guidebox
       @movies_with_updates = []
       @change_curr_page = 1
       @change_total_page = nil
+      @individual_response = nil
+      @new_movies_array = []
   end
 
   def change_update_movie_sources
@@ -102,6 +105,41 @@ class Guidebox
     end
   end
 
+  def add_results_info(new_movie, movie)
+    new_movie.title = movie["title"] if movie["title"]
+    new_movie.release_year = movie["release_year"] if movie["release_year"]
+    new_movie.omdb_id = movie["themoviedb"] if movie["themoviedb"]
+    new_movie.imdb_id = movie["imdb"] if movie["imdb"]
+    new_movie.rating = movie["rating"] if movie["rating"]
+    new_movie.wiki_id = movie["wikipedia_id"] if movie["wikipedia_id"]
+    new_movie
+  end
+
+  def iterate_through_and_create_new_movies
+    self.response["results"].each do |movie|
+      new_movie = Movie.find_by(guidebox_id: movie["id"])
+      if new_movie.nil?
+        new_movie = Movie.new(guidebox_id: movie["id"])
+        self.add_results_info(new_movie, movie)
+        self.update_individual_movie(new_movie)
+        self.add_movie_sources(new_movie)
+        self.new_movies_array << new_movie.id
+      end
+    end
+  end
+
+  def create_and_store_new_movies
+
+    store_all_movies_response
+    self.set_count
+
+    until self.curr_movie > self.total_results
+      iterate_through_and_create_new_movies
+      self.curr_movie += self.movie_count
+      self.store_all_movies_response
+    end      
+  end
+
   def collect_individual_movie_data(movie)
     self.class.get("/movie/#{movie.guidebox_id}")
   end
@@ -111,23 +149,22 @@ class Guidebox
   end
 
   def store_individual_response(movie)
-    self.response = self.collect_individual_movie_data(movie)
+    self.individual_response = self.collect_individual_movie_data(movie)
   end
 
   def update_individual_movie(movie)
     self.store_individual_response(movie)
-    movie.overview = response["overview"] if response["overview"]
-    movie.overview = response["overview"] if response["overview"]
-    movie.poster = response["poster_240x342"] if response["poster_240x342"]
-    if response["trailers"] && response["trailers"]["web"].any?
-      movie.trailer = response["trailers"]["web"][0]["embed"]
+    movie.overview = individual_response["overview"] if individual_response["overview"]
+    movie.poster = individual_response["poster_240x342"] if individual_response["poster_240x342"]
+    if individual_response["trailers"] && individual_response["trailers"]["web"].any?
+      movie.trailer = individual_response["trailers"]["web"][0]["embed"]
     end
-    movie.metacritic_url = response["metacritic"] if response["metacritic"]
+    movie.metacritic_url = individual_response["metacritic"] if individual_response["metacritic"]
     movie.save
   end
 
   def add_movie_sources(movie)
-    response["free_web_sources"].each do |web_source|
+    individual_response["free_web_sources"].each do |web_source|
       source = Source.new(movie_id: movie.id)
       source.name = web_source["source"]
       source.display_name = web_source["display_name"]
