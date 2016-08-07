@@ -169,12 +169,14 @@ class Guidebox
   end
 
   def add_movie_sources(movie)
-    self.individual_response["free_web_sources"].each do |web_source|
-      source = Source.new(movie_id: movie.id)
-      source.name = web_source["source"]
-      source.display_name = web_source["display_name"]
-      source.link = web_source["link"]
-      source.save
+    if individual_response["free_web_sources"] && individual_response["free_web_sources"].any?
+      self.individual_response["free_web_sources"].each do |web_source|
+        source = Source.new(movie_id: movie.id)
+        source.name = web_source["source"]
+        source.display_name = web_source["display_name"]
+        source.link = web_source["link"]
+        source.save
+      end
     end
   end
 
