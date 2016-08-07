@@ -24,7 +24,8 @@ class Guidebox
   end
 
   def change_update_movie_sources
-    self.change_collect_all_ids_in_database
+    self.change_collect_all_ids_requiring_update_in_db
+    puts self.movies_with_updates
     self.movies_with_updates.each do |movie_id|
       self.change_update_individual_movie_sources(movie_id)
     end
@@ -33,15 +34,28 @@ class Guidebox
   def change_update_individual_movie_sources(movie_id)
     self.response = self.collect_individual_movie_data_id(movie_id)
     curr_movie = Movie.find_by(guidebox_id: movie_id)
-    if self.response["free_web_sources"]
+    if self.response.code == 200
       curr_movie.sources.destroy_all
-      self.add_movie_sources(curr_movie)
+
+      if self.response["free_web_sources"].any?
+        self.add_movie_sources(curr_movie)
+      else
+        curr_movie.destroy
+      end
+
     end
   end
 
-  def change_collect_all_ids_in_database
+  def collect_individual_movie_data_id(id)
+    self.class.get("/movie/#{id}")
+  end
+
+  def change_collect_all_ids_requiring_update_in_db
     self.change_store_response
-    until self.change_curr_page >= self.change_total_page
+    until self.change_curr_page > self.change_total_page
+      puts change_total_page
+      puts change_curr_page
+      sleep 0.2
       self.change_collect_curr_page_change_ids
       self.change_curr_page = self.change_curr_page + 1
       self.change_store_response
@@ -64,7 +78,7 @@ class Guidebox
   end
 
   def change_request
-    update_time = DateTime.now - 7.days
+    update_time = DateTime.now - 1.days
     unix_update_time = update_time.to_i
     self.class.get("/updates/movies/changes/#{unix_update_time}/?limit=1000&page=#{self.change_curr_page}")
   end
@@ -145,10 +159,6 @@ class Guidebox
     self.class.get("/movie/#{movie.guidebox_id}")
   end
 
-  def collect_individual_movie_data_id(id)
-    self.class.get("/movie/#{id}")
-  end
-
   def store_individual_response(movie)
     self.individual_response = self.collect_individual_movie_data(movie)
   end
@@ -165,7 +175,7 @@ class Guidebox
   end
 
   def add_movie_sources(movie)
-    individual_response["free_web_sources"].each do |web_source|
+    self.response["free_web_sources"].each do |web_source|
       source = Source.new(movie_id: movie.id)
       source.name = web_source["source"]
       source.display_name = web_source["display_name"]

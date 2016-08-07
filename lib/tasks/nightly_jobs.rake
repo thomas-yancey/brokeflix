@@ -9,7 +9,6 @@ task :create_new_movies => :environment do
     imdb_id = movie.omdb_id || movie.imdb_id
     movie_db = MovieDatabase.new({movie: movie,
                                   imdb_id: imdb_id})
-    puts movie_db.response
     movie_db.add_trailer_key_to_movie
     movie_db.make_call_and_collect_imdb_and_genres
     if movie.imdb_id && movie.imdb_id.length > 0
@@ -21,5 +20,6 @@ task :create_new_movies => :environment do
 end
 
 task :update_changed_movies => :environment do
-
+  guidebox = Guidebox.new
+  guidebox.change_update_movie_sources
 end
