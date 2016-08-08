@@ -59,6 +59,7 @@ include HTTParty
 
   def add_trailer_key_to_movie
     self.set_trailer_response
+    sleep 0.1
     self.movie.update_attributes(trailer: self.grab_key_from_response)
   end
 

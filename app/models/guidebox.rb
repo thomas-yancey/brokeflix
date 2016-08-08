@@ -75,7 +75,7 @@ class Guidebox
   end
 
   def change_request
-    update_time = DateTime.now - 18.days
+    update_time = DateTime.now - 2.days
     unix_update_time = update_time.to_i
     self.class.get("/updates/movies/changes/#{unix_update_time}/?limit=1000&page=#{self.change_curr_page}")
   end

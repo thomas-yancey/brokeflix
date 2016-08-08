@@ -14,7 +14,7 @@ class MoviesController < ApplicationController
       '%' + search_text + '%',
       '%' + search_text + '%'
       ).order(
-      "#{params[:review_field]} DESC NULLS LAST"
+      "#{params[:review_field]} DESC NULLS LAST, movies.id DESC"
       )
     movies = movies.paginate(:page => params[:page], :per_page => 32)
     render json:  {
