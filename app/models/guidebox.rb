@@ -32,12 +32,12 @@ class Guidebox
   end
 
   def change_update_individual_movie_sources(movie_id)
-    self.response = self.collect_individual_movie_data_id(movie_id)
+    self.individual_response = self.collect_individual_movie_data_id(movie_id)
     curr_movie = Movie.find_by(guidebox_id: movie_id)
-    if self.response.code == 200
+    if self.individual_response.code == 200
       curr_movie.sources.destroy_all
 
-      if self.response["free_web_sources"].any?
+      if self.individual_response["free_web_sources"].any?
         self.add_movie_sources(curr_movie)
       else
         curr_movie.destroy

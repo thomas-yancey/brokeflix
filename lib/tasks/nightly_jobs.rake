@@ -21,7 +21,7 @@ task :create_new_movies => :environment do
   end
 end
 
-task :update_changed_movies => :environment do
+task :update_sources_of_changed_movies => :environment do
   guidebox = Guidebox.new
   guidebox.change_update_movie_sources
 end
