@@ -23,6 +23,37 @@ class Guidebox
       @new_movies_array = []
   end
 
+# calls for updates of movies that have changed
+  def change_store_response
+    total_response = self.change_request
+    self.change_curr_page = total_response["page"]
+    self.change_total_page = total_response["total_pages"]
+    self.change_results = total_response["results"]
+  end
+
+  def change_request
+    update_time = DateTime.now - 2.days
+    unix_update_time = update_time.to_i
+    self.class.get("/updates/movies/changes/#{unix_update_time}/?limit=1000&page=#{self.change_curr_page}")
+  end
+
+  def change_collect_curr_page_change_ids
+    self.change_results.each do |movie|
+      if Movie.find_by(guidebox_id: movie["id"])
+        movies_with_updates << movie["id"]
+      end
+    end
+  end
+
+  def change_collect_all_ids_requiring_update_in_db
+    self.change_store_response
+    until self.change_curr_page > self.change_total_page
+      self.change_collect_curr_page_change_ids
+      self.change_curr_page = self.change_curr_page + 1
+      self.change_store_response
+    end
+  end
+
   def change_update_movie_sources
     self.change_collect_all_ids_requiring_update_in_db
     self.movies_with_updates.each do |movie_id|
@@ -49,36 +80,6 @@ class Guidebox
     self.class.get("/movie/#{id}")
   end
 
-  def change_collect_all_ids_requiring_update_in_db
-    self.change_store_response
-    until self.change_curr_page > self.change_total_page
-      self.change_collect_curr_page_change_ids
-      self.change_curr_page = self.change_curr_page + 1
-      self.change_store_response
-    end
-  end
-
-  def change_collect_curr_page_change_ids
-    self.change_results.each do |movie|
-      if Movie.find_by(guidebox_id: movie["id"])
-        movies_with_updates << movie["id"]
-      end
-    end
-  end
-
-  def change_store_response
-    total_response = self.change_request
-    self.change_curr_page = total_response["page"]
-    self.change_total_page = total_response["total_pages"]
-    self.change_results = total_response["results"]
-  end
-
-  def change_request
-    update_time = DateTime.now - 2.days
-    unix_update_time = update_time.to_i
-    self.class.get("/updates/movies/changes/#{unix_update_time}/?limit=1000&page=#{self.change_curr_page}")
-  end
-
   def request_movies
     self.class.get("/movies/all/#{self.curr_movie}/#{self.movie_count}/#{self.sources}/#{self.platform}")
   end
@@ -91,30 +92,6 @@ class Guidebox
     self.total_results = self.response["total_results"]
   end
 
-  def collect_all_movies
-    self.store_all_movies_response
-    self.set_count
-
-    until self.curr_movie > self.total_results
-      self.iterate_through_and_create_all_movies
-      self.curr_movie += self.movie_count
-      self.store_all_movies_response
-    end
-  end
-
-  def iterate_through_and_create_all_movies
-    self.response["results"].each do |movie|
-      new_movie = Movie.find_or_create_by(guidebox_id: movie["id"])
-      new_movie.title = movie["title"] if movie["title"]
-      new_movie.release_year = movie["release_year"] if movie["release_year"]
-      new_movie.omdb_id = movie["themoviedb"] if movie["themoviedb"]
-      new_movie.imdb_id = movie["imdb"] if movie["imdb"]
-      new_movie.rating = movie["rating"] if movie["rating"]
-      new_movie.wiki_id = movie["wikipedia_id"] if movie["wikipedia_id"]
-      new_movie.save
-    end
-  end
-
   def add_results_info(new_movie, movie)
     new_movie.title = movie["title"] if movie["title"]
     new_movie.release_year = movie["release_year"] if movie["release_year"]
@@ -124,6 +101,8 @@ class Guidebox
     new_movie.wiki_id = movie["wikipedia_id"] if movie["wikipedia_id"]
     new_movie
   end
+
+# new movie calls  
 
   def iterate_through_and_create_new_movies
     self.response["results"].each do |movie|
@@ -176,14 +155,6 @@ class Guidebox
         source.link = web_source["link"]
         source.save
       end
-    end
-  end
-
-  def add_info_to_all_movies
-    movies = Movie.where(overview: nil)
-    movies.each do |curr_movie|
-      self.update_individual_movie(curr_movie)
-      self.add_movie_sources(curr_movie)
     end
   end
 
