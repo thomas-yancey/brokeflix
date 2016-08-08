@@ -28,7 +28,7 @@ end
 
 task :add_genres_to_all_movies_once => :environment do
   Movie.where.not(omdb_id: 0).each do |movie|
-    if movie.genres.sources.empty?
+    if movie.genres.empty?
       movie_db = MovieDatabase.new({movie: movie})
       movie_db.response = movie_db.call_general_info
       movie_db.collect_genres
