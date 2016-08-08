@@ -25,7 +25,6 @@ class Guidebox
 
   def change_update_movie_sources
     self.change_collect_all_ids_requiring_update_in_db
-    puts self.movies_with_updates
     self.movies_with_updates.each do |movie_id|
       self.change_update_individual_movie_sources(movie_id)
     end

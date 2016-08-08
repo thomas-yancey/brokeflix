@@ -19,12 +19,11 @@ include HTTParty
 
   def make_call_and_collect_imdb_and_genres
     self.response = self.call_general_info
+    sleep 0.2
     if self.response["imdb_id"]
       movie.update_attributes(imdb_id: self.response["imdb_id"])
     end
-    if self.response["genres"]
-      self.collect_genres
-    end
+    self.collect_genres if self.response["genres"]
   end
 
   def collect_genres
@@ -43,10 +42,6 @@ include HTTParty
     end
   end
 
-  def set_trailer_response
-    self.response = self.call_movie_videos
-  end
-
   def grab_key_from_response
     return nil if !response["results"] || response["results"].length == 0
     response["results"].each do |data|
@@ -58,7 +53,7 @@ include HTTParty
   end
 
   def add_trailer_key_to_movie
-    self.set_trailer_response
+    self.response = self.call_movie_videos
     sleep 0.1
     self.movie.update_attributes(trailer: self.grab_key_from_response)
   end
