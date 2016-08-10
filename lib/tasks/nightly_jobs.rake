@@ -32,6 +32,7 @@ task :add_genres_to_all_movies_once => :environment do
       sleep 0.25
       movie_db = MovieDatabase.new({movie: movie})
       movie_db.response = movie_db.call_general_info
+      sleep 0.1
       movie_db.collect_genres
     end
   end

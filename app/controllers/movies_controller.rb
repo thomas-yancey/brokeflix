@@ -1,12 +1,15 @@
 class MoviesController < ApplicationController
 
   def index
-
     search_text = params[:title_search].downcase
+    # make actually search directors and actors
+
     movies = Movie.where("release_year >= ? AND release_Year <= ?",
     params[:start_year],params[:end_year]).includes(
-      :sources, :director, :actors).where(
-      sources: {display_name: params[:selectedSources]}).where(
+      :sources, :director, :actors, :genres).where(
+      sources: {display_name: params[:selectedSources]}
+      # genres: {ids: [params[:genres]]}
+      ).where(
       "lower(title) LIKE ?
       OR LOWER(actors.name) LIKE ?
       OR LOWER(directors.name) LIKE ?",
@@ -21,7 +24,7 @@ class MoviesController < ApplicationController
       current_page: movies.current_page,
       total_pages: movies.total_pages,
       total_entries: movies.total_entries,
-      movies: movies.as_json(include: [:actors, :director, :sources] )
+      movies: movies.as_json(include: [:actors, :director, :sources, :genres] )
     }
   end
 
