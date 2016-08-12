@@ -25,15 +25,3 @@ task :update_sources_of_changed_movies => :environment do
   guidebox = Guidebox.new
   guidebox.change_update_movie_sources
 end
-
-task :add_genres_to_all_movies_once => :environment do
-  Movie.last(100).each do |movie|
-    if movie.genres.empty?
-      sleep 0.25
-      movie_db = MovieDatabase.new({movie: movie})
-      movie_db.response = movie_db.call_general_info
-      sleep 0.1
-      movie_db.collect_genres
-    end
-  end
-end
