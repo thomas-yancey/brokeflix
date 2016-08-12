@@ -27,7 +27,7 @@ task :update_sources_of_changed_movies => :environment do
 end
 
 task :add_genres_to_all_movies_once => :environment do
-  Movie.where.not(omdb_id: 0).each do |movie|
+  Movie.last(100).each do |movie|
     if movie.genres.empty?
       sleep 0.25
       movie_db = MovieDatabase.new({movie: movie})
