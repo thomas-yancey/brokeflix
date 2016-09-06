@@ -32,5 +32,6 @@ task :collect_all_backdrops_and_mobile_posters_one_time => :environment do
     movie_db.add_image_and_poster
     puts "#{movies.length} #{count}"
     count += 1
+    sleep 0.25
   end
 end
