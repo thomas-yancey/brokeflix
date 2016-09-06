@@ -13,7 +13,6 @@ task :create_new_movies => :environment do
       if movie.imdb_id && movie.imdb_id.length > 0
         omdb = Omdb.new({movie: movie, imdb_id: movie.imdb_id})
         omdb.make_call_and_collect_all_data
-
       end
 
     end
@@ -23,4 +22,15 @@ end
 task :update_sources_of_changed_movies => :environment do
   guidebox = Guidebox.new
   guidebox.change_update_movie_sources
+end
+
+task :collect_all_backdrops_and_mobile_posters_one_time => :environment do
+  movies = Movie.where.not(omdb_id: 0)
+  count = 1
+  movies.each do |movie|
+    movie_db = MovieDatabase.new({movie: movie})
+    movie_db.add_image_and_poster
+    puts "#{movies.length} #{count}"
+    count += 1
+  end
 end

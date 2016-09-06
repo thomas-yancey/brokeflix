@@ -74,14 +74,13 @@ include HTTParty
       backdrop = "https://image.tmdb.org/t/p/w500_and_h281_bestv2#{self.highest_rated_image("backdrops")}"
     end
 
-    puts backdrop
-    puts mobile_poster
-
+    self.movie.update_attributes({mobile_poster: mobile_poster, backdrop: backdrop})
+    
   end
 
   def highest_rated_image(type)
 
-    vote_count = 0
+    vote_count = -1
     image_file_path = ""
     response[type].each do |image|
       if image["vote_count"] > vote_count
