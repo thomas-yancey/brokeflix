@@ -10,7 +10,6 @@ class MoviesController < ApplicationController
       sources: {display_name: params[:selectedSources]}
       # genres: {ids: [params[:genres]]}
       ).where(
-      Select * FROM movies where actorsLOWER(actors.name)
       "LOWER(title) LIKE ?
       OR LOWER(actors.name) LIKE ?
       OR LOWER(directors.name) LIKE ?",
