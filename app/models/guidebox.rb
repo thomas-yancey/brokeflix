@@ -7,20 +7,20 @@ class Guidebox
 
   base_uri "http://api-public.guidebox.com/v1.43/US/#{ENV["GUIDEBOX_KEY"]}"
   def initialize(params={})
-      @curr_movie = params[:curr_movie] || 1
-      @movie_count = params[:movie_count] || 250
-      @sources = params[:sources] || "free"
-      @platform = params[:platform] || "web"
-      @response = nil
-      @total_results = 0
-      @total_pages = nil
-      @page = params[:page] || 1
-      @change_results = nil
-      @movies_with_updates = []
-      @change_curr_page = 1
-      @change_total_page = nil
-      @individual_response = nil
-      @new_movies_array = []
+    @curr_movie = params[:curr_movie] || 1
+    @movie_count = params[:movie_count] || 250
+    @sources = params[:sources] || "free"
+    @platform = params[:platform] || "web"
+    @response = nil
+    @total_results = 0
+    @total_pages = nil
+    @page = params[:page] || 1
+    @change_results = nil
+    @movies_with_updates = []
+    @change_curr_page = 1
+    @change_total_page = nil
+    @individual_response = nil
+    @new_movies_array = []
   end
 
   def store_individual_response(movie_id)
